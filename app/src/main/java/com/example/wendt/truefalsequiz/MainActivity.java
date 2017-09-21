@@ -1,5 +1,6 @@
 package com.example.wendt.truefalsequiz;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
@@ -16,6 +17,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private TextView questionText;
     private List<Question> questionBank;
     private int questionIndex = 0; //question user is currently on
+    private int userScore = 0;
+    private boolean questionAnswered = false; //if the user has answered or not
+    public static String EXTRA_SCORE_MESSAGE = "userScoreMessage";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,22 +75,34 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void checkAnswer(boolean userAnswer) {
         if(questionBank.get(questionIndex).checkAnswer(userAnswer)){ //if the user answer is true
             Toast.makeText(this, "true", Toast.LENGTH_SHORT).show();
+            userScore++;
         }
         else{ //else user answer is false
             Toast.makeText(this, "false", Toast.LENGTH_SHORT).show();
+            userScore--;
         }
         disableTrueFalseButtons();
+        questionAnswered = true;
     }
 
     /**
-     * Sets text to the new question, looping back if all questions have been seen
+     * Sets text to the new question, going to the result screen at the end
      */
     private void advanceToNextQuestion() {
+        if(questionAnswered){
+            enableTrueFalseButtons();
+            questionAnswered = false; //set it back to false for next question
+        }
+        else{ //decrease score for going to next question without answering
+            userScore--;
+        }
         if(questionIndex < questionBank.size()-1){
             questionIndex++;
         }
-        else{
-            questionIndex = 0;
+        else{ //user has reached the end of the quiz, shows results screen
+            Intent resultsScreen = new Intent(MainActivity.this, ResultsActivity.class);
+            resultsScreen.putExtra(EXTRA_SCORE_MESSAGE, userScore);
+            startActivity(resultsScreen);
         }
         questionText.setText(questionBank.get(questionIndex).getQuestionText());
     }
